@@ -1,39 +1,66 @@
 window.onload = function() {
-    var converter = new showdown.Converter();
+
     var pad = document.getElementById('pad');
-    var markdownArea = document.getElementById('markdown');
 
-    var prevMarkdown;
+    // make the tab act like a tab
+    pad.addEventListener('keydown',function(e) {
+        if(e.keyCode === 9) { // tab was pressed
+            // get caret position/selection
+            var start = this.selectionStart;
+            var end = this.selectionEnd;
 
+            var target = e.target;
+            var value = target.value;
 
-    var convertTextAreaToMarkdown = function(){
-        var markdownText = pad.value;
-        prevMarkdown = markdownText;
-        html = converter.makeHtml(markdownText);
-        markdownArea.innerHTML = html;
+            // set textarea value to: text before caret + tab + text after caret
+            target.value = value.substring(0, start)
+                + "\t"
+                + value.substring(end);
+
+            // put caret at right position again (add one for the tab)
+            this.selectionStart = this.selectionEnd = start + 1;
+
+            // prevent the focus lose
+            e.preventDefault();
+        }
+    });
+
+    var previousValue;
+
+    // convert text area to markdown html
+    var updateTextArea = function(){
+        var textValue = pad.value;
+        previousValue = textValue;
     };
 
     var didChangeOccur = function(){
-        if(prevMarkdown != pad.value){
+        if(previousValue != pad.value){
             return true;
-            console.log('run');
-
-        } else {
-            return false;
-        };
+        }
+        return false;
     };
 
-    setInterval(function() {
-        if(didChangeOccur()) {
-            convertTextAreaToMarkdown();
-        };
+    // check every second if the text area has changed
+    setInterval(function(){
+        if(didChangeOccur()){
+            updateTextArea();
+        }
     }, 1000);
 
-    pad.addEventListener('input', convertTextAreaToMarkdown);
+    // convert textarea on input change
+    pad.addEventListener('input', updateTextArea);
 
-    sharejs.open('home', 'text', function(error, doc) {
-        doc.attach_textarea(pad);
-        convertTextAreaToMarkdown();
-        console.log('run');
-    });
+    // ignore if on home page
+    if(document.location.pathname.length > 1){
+        // implement share js
+        var documentName = document.location.pathname.substring(1);
+        sharejs.open(documentName, 'text', function(error, doc) {
+            doc.attach_textarea(pad);
+            updateTextArea();
+        });
+    }
+
+    // convert on page load
+    updateTextArea();
+
 };

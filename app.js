@@ -11,11 +11,10 @@ var sharejs = require('share');
 //try without redis
 require('redis');
 
+//setup redis server
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
-
-
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
